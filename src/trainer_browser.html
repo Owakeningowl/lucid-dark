@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en" class="dark-mode">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://play.pokemonshowdown.com/style/font-awesome.css" />
+<link rel="stylesheet" href="../theme/panels.css?b1" />
+<link rel="stylesheet" href="../theme/main.css?b1" />
+<link rel="stylesheet" href="../theme/pokedex.css?b359" />
+<link rel="stylesheet" href="../theme/dark.css?v2" />
+<title>Trainer Browser &mdash; Pok&eacute;mon Lucid</title>
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #121212;
+  --surface: #181818;
+  --surface-2: #1F1F1F;
+  --well: #141414;
+  --ink: #ECECEE;
+  --muted: #9EA0A8;
+  --line: #2A2A2C;
+  --line-strong: #3B3B3F;
+  --accent: #FFCB5A;
+  --accent-soft: #2B2414;
+  --accent-ink: #14191F;
+  --field: #F2AE6B;
+  --field-soft: #33251A;
+  --tera: #B9A8FF;
+  --tera-soft: #25203A;
+  --status: #FF8E8E;
+  --status-soft: #3A1E1F;
+  --focus: #FFCB5A;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.wrap, .wrap * { box-sizing: border-box; }
+.pfx-topbar, .navbar { font-family: Verdana, Helvetica, Arial, sans-serif; font-size: 11pt; line-height: normal; }
+.navbar { clear: both; }
+.navbar { position: sticky; top: 0; z-index: 30; overflow: hidden; background: #1e1e1e; }
+.navbar ul { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin: 1px; padding: 0; }
+.navbar a { color: #e6ecf8; text-align: center; padding: 14px 16px; text-decoration: none; font-size: 17px; font-family: sans-serif; }
+.navbar a:hover { color: #fff; }
+.navbar a.on { color: #ffcb5a; }
+.pfx-topbar a, .pfx-topbar .button { font-family: Verdana, Helvetica, Arial, sans-serif; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.wrap { max-width: 1180px; margin-inline: auto; display: grid; gap: 16px; padding-inline: 16px; padding-block: 20px 40px; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Top bar */
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.brand h1 {
+  font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.1;
+  margin: 0; letter-spacing: 0.01em; text-wrap: balance;
+}
+.brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1 1 520px; justify-content: flex-end; }
+
+.search { position: relative; flex: 1 1 260px; max-width: 380px; }
+.search input {
+  width: 100%; height: 40px; padding: 0 12px 0 34px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+}
+.search svg { position: absolute; left: 11px; top: 12px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+.results {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px);
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+  margin: 0; padding: 4px; list-style: none; max-height: 340px; overflow-y: auto;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+}
+.results li {
+  display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: baseline;
+  padding: 7px 8px; border-radius: 6px; cursor: pointer;
+}
+.results li[aria-selected="true"], .results li:hover { background: var(--accent-soft); }
+.results .ri { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.results .rn { font-weight: 500; }
+.results .rn small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+.results .rs { font-size: 12px; color: var(--muted); }
+.results .empty { display: block; color: var(--muted); cursor: default; }
+.results .empty:hover { background: none; }
+
+.select-wrap { position: relative; }
+select {
+  height: 40px; padding: 0 32px 0 12px; appearance: none;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; cursor: pointer;
+}
+.select-wrap::after {
+  content: ""; position: absolute; right: 13px; top: 17px; width: 7px; height: 7px;
+  border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); pointer-events: none;
+}
+.toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; user-select: none; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+
+/* Viewer */
+.viewer { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; gap: 12px; align-items: stretch; }
+.tb-nav {
+  display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; cursor: pointer; color: var(--ink); transition: background .12s, border-color .12s;
+}
+.tb-nav:hover { background: var(--accent-soft); border-color: var(--accent); }
+.tb-nav:disabled { opacity: .35; cursor: default; background: var(--surface); border-color: var(--line); }
+.tb-nav svg { width: 22px; height: 22px; }
+.nav-label { display: none; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 16px; min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: space-between; align-items: start; }
+.eyebrow {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+}
+.eyebrow .tb-sep { opacity: .5; }
+.tname { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1.1; margin: 4px 0 0; text-wrap: balance; }
+.tname .cls { display: block; font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; margin-bottom: 2px; }
+.counter { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.counter .big { font-size: 22px; font-weight: 500; }
+.counter .big span { color: var(--muted); font-size: 15px; }
+.counter .sub { color: var(--muted); font-size: 12px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px;
+  border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink);
+}
+.chip.kind { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+.chip.field { background: var(--field-soft); border-color: transparent; color: var(--field); }
+.chip.warn { background: var(--status-soft); border-color: transparent; color: var(--status); }
+
+.rows { display: grid; gap: 18px; }
+.row { display: grid; gap: 8px; }
+.row-label { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+.row-label b { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.row-label span { color: var(--muted); }
+.party { display: grid; grid-template-columns: repeat(6, minmax(148px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 2px; }
+
+.card {
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 11px 12px 12px; display: grid; gap: 8px; align-content: start; min-width: 0;
+}
+.card.empty { background: transparent; border-style: dashed; display: grid; place-items: center; min-height: 200px; color: var(--muted); font-size: 12px; }
+.card.stub { opacity: .6; }
+.tb-sprite {
+  height: 88px; margin: -2px -3px 0; border-radius: 7px; background: var(--well);
+  display: grid; place-items: center; overflow: hidden;
+}
+.tb-sprite img { width: 96px; height: 96px; max-width: none; image-rendering: pixelated; }
+.iico { width: 24px; height: 24px; image-rendering: pixelated; vertical-align: -7px; margin: -4px 2px -4px -3px; }
+.tb-sprite .ball { width: 34px; height: 34px; opacity: .35; }
+.ctop { display: grid; gap: 1px; }
+.mon { font-family: var(--display); font-weight: 700; font-size: 16px; line-height: 1.15; overflow-wrap: break-word; hyphens: manual; }
+.lv { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lv b { color: var(--ink); font-weight: 500; font-size: 13px; }
+.meta { display: grid; gap: 2px; font-size: 12.5px; }
+.meta div { line-height: 1.35; }
+.meta .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; margin-right: 5px; }
+.meta .v { overflow-wrap: break-word; }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 4px; }
+.badge.tera { background: var(--tera-soft); color: var(--tera); }
+.badge.st { background: var(--status-soft); color: var(--status); }
+.moves { list-style: none; margin: 0; padding: 8px 0 0; border-top: 1px solid var(--line); display: grid; gap: 3px; font-size: 13px; min-height: calc(4 * 1.45em + 3 * 3px + 8px); }
+.moves li { overflow-wrap: anywhere; }
+.moves .none { color: var(--muted); font-style: italic; }
+
+/* Split roster */
+.roster { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.roster summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style-position: inside; }
+.roster summary span { color: var(--muted); font-weight: 400; }
+.roster ol { list-style: none; margin: 0; padding: 0 12px 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+.roster button {
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px;
+  font-size: 12.5px; cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline;
+}
+.roster button i { font-style: normal; font-family: var(--mono); color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.roster button:hover { border-color: var(--accent); }
+.roster button[aria-current="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.roster button[aria-current="true"] i { color: inherit; opacity: .8; }
+
+.tname .plus { color: var(--muted); font-weight: 500; }
+.loading, .loader p { color: var(--muted); margin: 0; }
+.loader { display: grid; gap: 12px; justify-items: start; padding-block: 24px; }
+.loadbtn { height: 40px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 13px; }
+.loadbtn:hover { border-color: var(--accent); }
+.pickbtn { background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 9px 14px; font-weight: 600; cursor: pointer; }
+.viewtoggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; height: 40px; }
+.viewtoggle button { background: var(--surface); border: 0; padding: 0 12px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.viewtoggle button + button { border-left: 1px solid var(--line-strong); }
+.viewtoggle button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.sheet-wrap { overflow-x: auto; padding-top: 2px; }
+.sheet { border-collapse: collapse; width: 100%; min-width: 760px; table-layout: fixed; font-size: 14px; }
+.sheet caption {
+  background: #0f1419; color: #ffcb5a; font-weight: 700; padding: 5px 15px; text-align: center; position: relative;
+}
+.sheet th, .sheet td { border: 1px solid #000; padding: 3px 8px; text-align: center; overflow-wrap: break-word; }
+.sheet tbody tr { background: #181818; color: #e6ecf8; }
+.sheet tbody tr:nth-of-type(even) { background: #1f1f1f; }
+.sheet tbody tr:last-of-type { border-bottom: 3px solid #03396c; }
+.sheet th { font-weight: 700; padding-block: 5px; }
+.sheet-sprite { height: 80px; display: grid; place-items: center; overflow: hidden; }
+.sheet-sprite img { width: 96px; height: 96px; max-width: none; image-rendering: pixelated; }
+.sheet-sprite .ball { width: 30px; height: 30px; opacity: .35; }
+.tera-tag { display: block; width: fit-content; margin: 2px auto 0; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--tera); border: 1px solid currentColor; border-radius: 999px; padding: 0 6px; }
+.item-cell { display: inline-flex; align-items: center; gap: 2px; }
+.item-cell .iico { margin: -4px 0; vertical-align: middle; }
+.tnote { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); }
+.tnote-dot { display: block; width: 10px; height: 10px; padding: 0; border: 1px solid #ff9b9b; border-radius: 50%; background: #cf4a4a; cursor: help; }
+.tnote-dot:hover, .tnote-dot:focus-visible { background: #e85a5a; outline: 2px solid #fff; outline-offset: 2px; }
+.tnote-panel {
+  display: none; position: absolute; top: calc(100% + 10px); right: -6px; z-index: 5; width: min(260px, 75vw);
+  padding: 10px 12px; border: 1px solid #b7b7b7; border-radius: 4px; background: #f8f8f8; color: #333;
+  text-align: left; font-size: 13px; font-weight: 400; line-height: 1.35; white-space: pre-line; box-shadow: 0 3px 10px rgba(0,0,0,.35);
+}
+.tnote:hover .tnote-panel, .tnote:focus-within .tnote-panel { display: block; }
+.rows:has(.sheet) { gap: 22px; }
+
+.hint { color: var(--muted); font-size: 12px; text-align: center; }
+kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+
+@media (max-width: 1020px) {
+}
+@media (max-width: 700px) {
+  .viewer { grid-template-columns: 1fr 1fr; }
+  .panel { grid-column: 1 / -1; grid-row: 1; padding: 14px; }
+  .tb-nav { grid-row: 2; height: 46px; display: flex; gap: 6px; justify-content: center; }
+  .nav-label { display: inline; font-weight: 500; }
+  .party { gap: 8px; }
+  .tname { font-size: 24px; }
+  .search { max-width: none; flex-basis: 100%; }
+  .controls { justify-content: flex-start; }
+  .hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="pfx-topbar">
+	<div class="header">
+		<ul class="nav">
+			<li><a class="button nav-first" href="https://github.com/lhearachel/porydex"><img src="../images/pokemonshowdownbeta.png" alt="Pok&eacute;mon Showdown! (beta)" />Github</a></li>
+			<li><a class="button" href="../">Pok&eacute;dex</a></li>
+			<li><a class="button" href="../calc/" target="_blank">Calculator</a></li>
+			<li><a class="button nav-last" href="resources.html">Trainer Sheet</a></li>
+		</ul>
+		<div style="clear:both"></div>
+	</div>
+</div>
+<div class="navbar">
+	<ul>
+		<a href="resources.html">Home</a>
+		<a href="roxanne_split.html">Roxanne</a>
+		<a href="brawly_split.html">Brawly</a>
+		<a href="wattson_split.html">Wattson</a>
+		<a href="juan_split.html">Juan</a>
+		<a href="steven_split.html">Steven</a>
+		<a href="winona_split.html">Winona</a>
+		<a href="tate_and_liza_split.html">Tate & Liza</a>
+		<a href="flannery_split.html">Flannery</a>
+		<a href="elite_four_split.html">Elite Four</a>
+		<a href="trainer_browser.html" class="on">Trainer Browser</a>
+	</ul>
+</div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Trainer Browser</h1>
+      <p id="summary"></p>
+    </div>
+    <div class="controls">
+      <div class="search">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>
+        <input id="q" type="search" placeholder="Search trainer, Pokémon, route, or #index" autocomplete="off"
+          role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
+        <ul id="results" class="results" role="listbox" hidden></ul>
+      </div>
+      <div class="select-wrap">
+        <select id="split" aria-label="Jump to split"></select>
+      </div>
+      <div class="viewtoggle" role="group" aria-label="Layout">
+        <button type="button" id="vSheet" aria-pressed="true">Sheet</button><button type="button" id="vCards" aria-pressed="false">Cards</button>
+      </div>
+      <label class="toggle"><input id="stubs" type="checkbox"> Show placeholders</label>
+      <label class="loadbtn" id="loadbtn" hidden>Load JSON<input id="file2" type="file" accept=".json,application/json" hidden></label>
+    </div>
+  </header>
+
+  <section class="viewer" aria-label="Trainer">
+    <button class="tb-nav" id="prev" aria-label="Previous trainer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="nav-label">Back</span>
+    </button>
+    <article class="panel" id="panel" aria-live="polite"><p class="loading">Loading trainers…</p></article>
+    <button class="tb-nav" id="next" aria-label="Next trainer">
+      <span class="nav-label">Forward</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </section>
+
+  <details class="roster" id="roster">
+    <summary id="rosterTitle"></summary>
+    <ol id="rosterList"></ol>
+  </details>
+
+  <p class="hint"><kbd>←</kbd> <kbd>→</kbd> to cycle &nbsp;·&nbsp; <kbd>/</kbd> to search</p>
+</div>
+
+<script>
+/* Data is read from trainers.json next to this page.
+   Change DATA_URL if the file lives elsewhere. */
+const DATA_URL = "trainers.json";
+
+/* When the page is opened straight from disk (file://), browsers block it
+   from reading trainers.json. Then the viewer picks the file once and the
+   page keeps a copy in this browser for next time. */
+const SAVED_KEY = "tb.data";
+let dataSource = "";   // "" = trainers.json loaded directly, otherwise a note
+
+function readSaved() {
+  try { const v = localStorage.getItem(SAVED_KEY); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+function saveCopy(data) {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify({ savedAt: Date.now(), data })); return true; } catch { return false; }
+}
+
+async function boot() {
+  try {
+    const res = await fetch(DATA_URL, { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status + " " + res.statusText);
+    init(await res.json());
+    return;
+  } catch (err) {
+    const saved = readSaved();
+    if (saved && Array.isArray(saved.data)) {
+      dataSource = "Saved copy from " + new Date(saved.savedAt).toLocaleString();
+      init(saved.data);
+      return;
+    }
+    const fromDisk = location.protocol === "file:";
+    showLoader(fromDisk
+      ? `Your browser won't let a page opened from your computer read ${DATA_URL} by itself. Choose the file once (or drag it onto this page) and it will load automatically after that. On your website it loads with no extra step.`
+      : `Couldn't load ${DATA_URL} (${err.message}). Check that it sits in the same folder as this page, or choose the file below.`);
+  }
+}
+
+async function loadPicked(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); }
+  catch (err) { showLoader(`${file.name} isn't valid JSON (${err.message}).`); return; }
+  if (!Array.isArray(data) || !data.every(t => t && Array.isArray(t.mons))) {
+    showLoader(`${file.name} doesn't look like a trainers file. It should be a list of trainers, each with a "mons" list.`);
+    return;
+  }
+  const kept = saveCopy(data);
+  if (booted) { location.reload(); return; }     // restart cleanly with the new data
+  dataSource = kept ? "Saved copy from " + new Date().toLocaleString() : "Loaded from " + file.name + " (not saved)";
+  init(data);
+}
+
+function showLoader(msg) {
+  const panel = document.getElementById("panel");
+  panel.innerHTML = `<div class="loader"><p>${msg}</p>
+    <label class="pickbtn">Choose trainers.json<input id="file" type="file" accept=".json,application/json" hidden></label></div>`;
+  document.getElementById("file").addEventListener("change", e => { const f = e.target.files[0]; if (f) loadPicked(f); });
+}
+
+// Drop a JSON file anywhere on the page to load it.
+document.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("Files")) e.preventDefault(); });
+document.addEventListener("drop", e => {
+  const f = e.dataTransfer.files[0];
+  if (f) { e.preventDefault(); loadPicked(f); }
+});
+
+let booted = false;
+function init(RAW) {
+if (booted) { location.reload(); return; }
+booted = true;
+/* ---------- data prep ---------- */
+const MON_STATUS = new Set(["Poison","Toxic","Burn","Paralysis","Paralyze","Sleep","Freeze","Frostbite"]);
+const trainers = RAW
+  .slice()
+  .sort((a, b) => a.trainerIndex - b.trainerIndex)
+  .map(t => {
+    const mons = t.mons.filter(m => m.name && !m.name.startsWith("/*") && m.level > 0);
+    const stub = mons.length > 0 && mons.every(m => m.level <= 1 && (!m.moves || !m.moves.length));
+    const name = t.name.replace(/\b[A-Z]{2,}\b/g, w => w[0] + w.slice(1).toLowerCase());
+    return { ...t, name, mons, stub };
+  });
+
+function kindLabel(pair) {
+  const p = (pair || "").toUpperCase().replace(/\s+/g, "");
+  if (p === "B2B" || p === "BACKTOBACK") return "Back-to-back";
+  if (p) return "1v2 battle";
+  return "";
+}
+
+/* Double battles against two trainers ("Twins Gina & Mia", "Leader Tate&Liza")
+   are one entry with a shared party. Show each trainer on their own row:
+   the first half of the party goes to the first name. */
+const isTagTeam = t => t.name.includes("&");
+
+/* Double battles against ONE trainer can't be seen from the name.
+   Mark them either in trainers.json ("double": true, or "pair": "Double")
+   or by adding their trainerIndex to this list. */
+const DOUBLE_BATTLES = [];
+const isDouble = t => isTagTeam(t) || t.double === true || /double/i.test(t.battleType || "") ||
+  /^doubles?$/i.test(t.pair || "") || DOUBLE_BATTLES.includes(t.trainerIndex);
+function splitDouble(t) {
+  const m = /^(.*?)\s*(\S+)\s*&\s*(\S+)$/.exec(t.name);
+  if (!m) return null;
+  const [, cls, a, b] = m;
+  const half = Math.ceil(t.mons.length / 2);
+  return [
+    { label: a, t: { trainerIndex: t.trainerIndex, name: (cls + " " + a).trim(), mons: t.mons.slice(0, half) } },
+    { label: b, t: { trainerIndex: t.trainerIndex, name: (cls + " " + b).trim(), mons: t.mons.slice(half) } }
+  ];
+}
+
+/* Group trainers into battles. `pair` links a trainer to the next one;
+   a shared non-empty `team` groups consecutive trainers into one fight. */
+function buildBattles(showStubs) {
+  const list = trainers.filter(t => showStubs || !t.stub);
+  const out = [];
+  for (let i = 0; i < list.length; i++) {
+    const t = list[i];
+    const group = [t];
+    let kind = "";
+    if (t.team) {
+      while (i + 1 < list.length && list[i + 1].team === t.team) group.push(list[++i]);
+      if (group.length > 1) kind = "1v2 battle";
+    }
+    if (!kind && t.pair && !/^doubles?$/i.test(t.pair) && i + 1 < list.length) {
+      group.push(list[++i]);
+      kind = kindLabel(t.pair);
+    }
+    const battle = { trainers: group, kind, split: t.split };
+    if (kind === "1v2 battle" && group.some(isDouble)) kind = "1v2 double battle";
+    if (!kind && isDouble(t)) {
+      battle.kind = "Double battle";
+    }
+    out.push(battle);
+  }
+  return out;
+}
+
+const splits = [...new Set(trainers.map(t => t.split))];
+
+/* ---------- state ---------- */
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+let showStubs = store.get("tb.stubs") === "1";
+let view = store.get("tb.view") === "cards" ? "cards" : "sheet";
+let battles = buildBattles(showStubs);
+let pos = 0;
+
+function findBattle(trainerIndex) {
+  return battles.findIndex(b => b.trainers.some(t => t.trainerIndex === trainerIndex));
+}
+
+/* ---------- elements ---------- */
+const $ = id => document.getElementById(id);
+const panel = $("panel"), prevBtn = $("prev"), nextBtn = $("next");
+const splitSel = $("split"), q = $("q"), results = $("results"), stubsBox = $("stubs");
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pad = n => String(n).padStart(3, "0");
+
+function splitName(t) {
+  // "Youngster Calvin" -> class "Youngster", name "Calvin". Multi-word classes are common, so take the last word(s) that start uppercase after a class.
+  const w = t.name.split(" ");
+  if (w.length < 2) return { cls: "", nm: t.name };
+  const amp = w.indexOf("&");
+  if (amp > 0) return { cls: w.slice(0, amp - 1).join(" "), nm: w.slice(amp - 1).join(" ") };
+  return { cls: w.slice(0, -1).join(" "), nm: w[w.length - 1] };
+}
+
+/* ---------- sprites ----------
+   Showdown gen5 sprites, same source as the trainer sheet.
+   Name -> id: "Iron-Moth" -> "ironmoth", "Tauros-Paldea-Aqua" -> "tauros-paldeaaqua". */
+const SPRITE_BASE = "https://play.pokemonshowdown.com/sprites/gen5/";
+const JOINED_PREFIX = new Set(["tapu", "iron"]);
+const JOINED_PAIRS = new Set(["great-tusk","scream-tail","brute-bonnet","flutter-mane","slither-wing","sandy-shocks",
+  "roaring-moon","walking-wake","gouging-fire","raging-bolt","chi-yu","chien-pao","ting-lu","wo-chien",
+  "kommo-o","hakamo-o","jangmo-o","porygon-z","ho-oh","mr-mime","mime-jr","mr-rime","type-null"]);
+const SPRITE_OVERRIDES = { "greninja-battle-bond": "greninja-ash", "terapagos-terastal": "terapagos" };
+
+function spriteId(name) {
+  const k = name.replace(/\s*\((M|F)\)\s*$/, "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  if (SPRITE_OVERRIDES[k]) return SPRITE_OVERRIDES[k];
+  const seg = k.split("-");
+  const joined = JOINED_PREFIX.has(seg[0]) || JOINED_PAIRS.has(seg.slice(0, 2).join("-"));
+  const base = joined ? seg[0] + (seg[1] || "") : seg[0];
+  const rest = seg.slice(joined ? 2 : 1).join("");
+  return rest ? base + "-" + rest : base;
+}
+const BALL = `<svg class="ball" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="#9EA0A8" stroke-width="2.5"/><path d="M2 16h9M21 16h9" stroke="#9EA0A8" stroke-width="2.5"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="#9EA0A8" stroke-width="2.5"/></svg>`;
+
+/* Item icons: same sources as the trainer sheet's split_item_sprites.js. */
+const ITEM_ICON_BASE = "https://play.pokemonshowdown.com/sprites/itemicons/";
+const ITEM_ICON_ALT_BASE = "https://img.pokemondb.net/sprites/items/";
+const ITEM_DIRECT = {
+  "eject pack": "https://archives.bulbagarden.net/media/upload/f/f1/Bag_Eject_Pack_SV_Sprite.png",
+  "loaded dice": "https://archives.bulbagarden.net/wiki/Special:FilePath/Bag_Loaded_Dice_SV_Sprite.png",
+  "booster energy": "https://archives.bulbagarden.net/wiki/Special:FilePath/Bag_Booster_Energy_SV_Sprite.png",
+  "clear amulet": "https://archives.bulbagarden.net/media/upload/f/fa/Bag_Clear_Amulet_SV_Sprite.png",
+  "blunder policy": "https://archives.bulbagarden.net/media/upload/4/4f/Bag_Blunder_Policy_SV_Sprite.png",
+  "punching glove": "https://archives.bulbagarden.net/media/upload/0/0f/Bag_Punching_Glove_SV_Sprite.png",
+  "covert cloak": "https://archives.bulbagarden.net/media/upload/d/d5/Bag_Covert_Cloak_SV_Sprite.png",
+  "room service": "https://archives.bulbagarden.net/wiki/Special:FilePath/Bag_Room_Service_SV_Sprite.png",
+  "ability shield": "https://archives.bulbagarden.net/wiki/Special:FilePath/Bag_Ability_Shield_SV_Sprite.png",
+  "throat spray": "https://archives.bulbagarden.net/wiki/Special:FilePath/Bag_Throat_Spray_SV_Sprite.png",
+  "utility umbrella": "https://archives.bulbagarden.net/media/upload/2/2f/Bag_Utility_Umbrella_SV_Sprite.png",
+  "leek": "https://archives.bulbagarden.net/media/upload/8/89/Bag_Leek_ZA_Sprite.png",
+  "fairy feather": "https://archives.bulbagarden.net/media/upload/9/97/Bag_Fairy_Feather_SV_Sprite.png"
+};
+const itemId = n => n.toLowerCase().replace(/[.'"]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+/* Backup copy of the sprites (sprite-pack.json). Only fetched if the
+   online sprites fail to load, e.g. in a preview that blocks outside images. */
+const SPRITE_PACK_URL = "sprite-pack.json";
+let packPromise = null;
+const loadPack = () => packPromise ||= fetch(SPRITE_PACK_URL).then(r => r.ok ? r.json() : null).catch(() => null);
+function packLookup(p, kind, keys) {
+  if (!p) return null;
+  for (const k of keys.split(",")) {
+    if (!k) continue;
+    const u = kind === "mon" ? p.mon[p.map[k]] : p.item[k];
+    if (u) return u;
+  }
+  return null;
+}
+function giveUp(img) {
+  if (img.dataset.kind === "mon") img.parentNode.innerHTML = BALL; else img.remove();
+}
+// Try each URL in data-srcs, then the backup pack, then give up.
+function imgFail(img) {
+  const rest = JSON.parse(img.dataset.srcs || "[]");
+  if (rest.length) { img.dataset.srcs = JSON.stringify(rest.slice(1)); img.src = rest[0]; return; }
+  if (img.dataset.packed) { giveUp(img); return; }
+  img.dataset.packed = "1";
+  loadPack().then(p => { const u = packLookup(p, img.dataset.kind, img.dataset.keys); if (u) img.src = u; else giveUp(img); });
+}
+window.imgFail = imgFail;
+function imgTag(kind, srcs, keys, cls) {
+  const [first, ...rest] = srcs;
+  return `<img class="${cls}" src="${first}" alt="" loading="lazy" data-kind="${kind}" data-keys="${esc(keys)}" data-srcs='${esc(JSON.stringify(rest))}' onerror="imgFail(this)">`;
+}
+function itemIcon(name) {
+  const id = itemId(name);
+  const srcs = [ITEM_DIRECT[name.toLowerCase()], ITEM_ICON_BASE + id + ".png", ITEM_ICON_ALT_BASE + id + ".png"].filter(Boolean);
+  return imgTag("item", srcs, id, "iico");
+}
+
+/* ---------- render ---------- */
+function monCard(m) {
+  const status = m.status && MON_STATUS.has(m.status) ? m.status : "";
+  const badges = [
+    m.tera_type ? `<span class="badge tera">Tera ${esc(m.tera_type)}</span>` : "",
+    status ? `<span class="badge st">${esc(status)}</span>` : ""
+  ].join("");
+  const rows = [
+    ["Item", m.item, m.item ? itemIcon(m.item) : ""], ["Ability", m.ability, ""], ["Nature", m.nature, ""]
+  ].filter(r => r[1]).map(([k, v, icon]) => `<div><span class="k">${k}</span>${icon}<span class="v">${esc(v)}</span></div>`).join("");
+  const moves = (m.moves || []).length
+    ? m.moves.map(mv => `<li>${esc(mv)}</li>`).join("")
+    : `<li class="none">No moves listed</li>`;
+  const stub = m.level <= 1 && !(m.moves || []).length;
+  const id = spriteId(m.name);
+  const base = id.includes("-") ? id.split("-")[0] : "";
+  return `<div class="card${stub ? " stub" : ""}">
+    <div class="tb-sprite">${imgTag("mon", [SPRITE_BASE + id + ".png", ...(base ? [SPRITE_BASE + base + ".png"] : [])], id + "," + base, "")}</div>
+    <div class="ctop"><span class="mon">${esc(m.name).replace(/-/g, "-<wbr>")}</span><span class="lv">Lv <b>${m.level}</b></span></div>
+    ${badges ? `<div class="badges">${badges}</div>` : ""}
+    ${rows ? `<div class="meta">${rows}</div>` : ""}
+    <ul class="moves">${moves}</ul>
+  </div>`;
+}
+
+/* Sheet view: the same table layout as the trainer sheet pages.
+   One table per trainer, 6 columns, one row per stat. */
+function monSprite(m) {
+  const id = spriteId(m.name);
+  const base = id.includes("-") ? id.split("-")[0] : "";
+  return imgTag("mon", [SPRITE_BASE + id + ".png", ...(base ? [SPRITE_BASE + base + ".png"] : [])], id + "," + base, "");
+}
+function partyTable(t, caption, note) {
+  const cols = Math.max(6, t.mons.length);
+  const cell = (fn, tag = "td") => {
+    let out = "";
+    for (let i = 0; i < cols; i++) { const m = t.mons[i]; out += `<${tag}>${m ? fn(m) : ""}</${tag}>`; }
+    return `<tr>${out}</tr>`;
+  };
+  const lvl = m => {
+    const st = m.status && MON_STATUS.has(m.status) ? ` (${esc(m.status)})` : "";
+    return `${m.level}${st}`;
+  };
+  const name = m => `${esc(m.name)}${m.tera_type ? `<span class="tera-tag">Tera ${esc(m.tera_type)}</span>` : ""}`;
+  const item = m => m.item ? `<span class="item-cell">${itemIcon(m.item)}${esc(m.item)}</span>` : "None";
+  const moveRows = [0, 1, 2, 3].map(k => cell(m => esc((m.moves || [])[k] || ""))).join("");
+  const noteHtml = note
+    ? `<span class="tnote"><button type="button" class="tnote-dot" aria-label="Note: ${esc(note)}"></button><span class="tnote-panel" role="tooltip">${esc(note)}</span></span>`
+    : "";
+  return `<div class="sheet-wrap"><table class="sheet">
+    <caption>#${pad(t.trainerIndex)} · ${esc(caption)}${noteHtml}</caption>
+    <tbody>
+      ${cell(m => `<div class="sheet-sprite">${monSprite(m)}</div>`)}
+      ${cell(name, "th")}
+      ${cell(lvl)}
+      ${cell(item)}
+      ${cell(m => esc(m.ability || ""))}
+      ${cell(m => esc(m.nature || ""))}
+      ${moveRows}
+    </tbody></table></div>`;
+}
+
+function partyRow(t, label) {
+  const slots = Math.max(6, t.mons.length);
+  let cards = t.mons.map(monCard).join("");
+  for (let i = t.mons.length; i < slots; i++) cards += `<div class="card empty" aria-hidden="true">Empty</div>`;
+  const head = label
+    ? `<div class="row-label"><b>${esc(label)}</b><span>#${pad(t.trainerIndex)} · ${esc(t.name)} · ${t.mons.length} Pokémon</span></div>`
+    : "";
+  return `<div class="row">${head}<div class="party">${cards}</div></div>`;
+}
+
+function render() {
+  const b = battles[pos];
+  if (!b) { panel.innerHTML = "<p>No trainers to show.</p>"; return; }
+  const lead = b.trainers[0];
+  const multi = b.trainers.length > 1;
+  const inSplit = battles.filter(x => x.split === b.split);
+  const splitPos = inSplit.indexOf(b) + 1;
+
+  const fields = [...new Set(b.trainers.flatMap(t => t.mons.map(m => m.status).filter(s => s && !MON_STATUS.has(s))))];
+  const chips = [
+    ...(b.kind ? [`<span class="chip kind">${b.kind}</span>`] : []),
+    ...[...new Set(b.trainers.map(t => t.locationNote).filter(Boolean))].map(n => `<span class="chip field">${esc(n)}</span>`),
+    ...fields.map(f => `<span class="chip field">Field: ${esc(f)}</span>`),
+    ...[...new Set(b.trainers.map(t => t.note).filter(Boolean))].map(n => `<span class="chip">${esc(n)}</span>`),
+    ...(b.trainers.some(t => t.stub) ? [`<span class="chip warn">Placeholder data</span>`] : [])
+  ].join("");
+
+  let title;
+  if (multi) {
+    title = `<h2 class="tname">${b.trainers.map(t => esc(t.name)).join(" <span class=\"plus\">+</span> ")}</h2>`;
+  } else {
+    const { cls, nm } = splitName(lead);
+    title = `<h2 class="tname">${cls ? `<span class="cls">${esc(cls)}</span>` : ""}${esc(nm)}</h2>`;
+  }
+
+  const labels = b.kind === "Back-to-back" ? ["Fight 1", "Fight 2", "Fight 3"] : ["Left", "Right", "Trainer 3"];
+  let rows;
+  if (view === "sheet") {
+    const fieldNote = t => [...new Set(t.mons.map(m => m.status).filter(s => s && !MON_STATUS.has(s)))].map(f => "Field: " + f);
+    if (b.rows) {
+      rows = b.rows.map((r, i) => partyTable(r.t, r.t.name,
+        ["Double with " + b.rows[1 - i].t.name, ...fieldNote(r.t)].join("\n"))).join("");
+    } else {
+      rows = b.trainers.map((t, i) => {
+        const notes = [];
+        if (b.kind === "Back-to-back" && b.trainers[i + 1]) notes.push("Consecutive Battle with " + b.trainers[i + 1].name);
+        if (b.kind === "Back-to-back" && i > 0) notes.push("Consecutive Battle after " + b.trainers[i - 1].name);
+        if (/^1v2/.test(b.kind)) notes.push("1v2 with " + b.trainers.filter(x => x !== t).map(x => x.name).join(", "));
+        if (/double/i.test(b.kind)) notes.push("Double");
+        if (t.note) notes.push(t.note);
+        if (t.locationNote) notes.push(t.locationNote);
+        return partyTable(t, t.name, [...notes, ...fieldNote(t)].join("\n"));
+      }).join("");
+    }
+  } else {
+    rows = b.rows
+      ? b.rows.map(r => partyRow(r.t, r.label)).join("")
+      : b.trainers.map((t, i) => partyRow(t, multi ? labels[i] || `Trainer ${i + 1}` : "")).join("");
+  }
+
+  panel.innerHTML = `
+    <div class="phead">
+      <div>
+        <div class="eyebrow"><span>${esc(b.split)}</span><span class="tb-sep">/</span>${lead.location ? `<span>${esc(lead.location)}</span><span class="tb-sep">/</span>` : ""}<span>#${b.trainers.map(t => pad(t.trainerIndex)).join(" + #")}</span></div>
+        ${title}
+      </div>
+      <div class="counter">
+        <div class="big">${pad(pos + 1)} <span>/ ${pad(battles.length)}</span></div>
+        <div class="sub">${splitPos} of ${inSplit.length} in ${esc(b.split)}</div>
+      </div>
+    </div>
+    <div class="chips">${chips}</div>
+    <div class="rows">${rows}</div>`;
+
+  prevBtn.disabled = pos === 0;
+  nextBtn.disabled = pos === battles.length - 1;
+  splitSel.value = b.split;
+  renderRoster(b, inSplit);
+
+  store.set("tb.pos", String(lead.trainerIndex));
+  try { history.replaceState(null, "", "#t" + lead.trainerIndex); } catch {}
+}
+
+function renderRoster(b, inSplit) {
+  $("rosterTitle").innerHTML = `All trainers in ${esc(b.split)} <span>(${inSplit.length})</span>`;
+  $("rosterList").innerHTML = inSplit.map(x => {
+    const t = x.trainers[0];
+    const nm = x.trainers.map(y => y.name).join(" + ");
+    return `<li><button data-t="${t.trainerIndex}" ${x === b ? 'aria-current="true"' : ""}><i>${pad(t.trainerIndex)}</i>${esc(nm)}</button></li>`;
+  }).join("");
+}
+
+function go(i) {
+  pos = Math.max(0, Math.min(battles.length - 1, i));
+  render();
+}
+function goTrainer(idx) {
+  let i = findBattle(idx);
+  if (i < 0 && !showStubs) {           // trainer is a hidden placeholder: reveal placeholders
+    showStubs = true; stubsBox.checked = true; store.set("tb.stubs", "1");
+    battles = buildBattles(true); i = findBattle(idx);
+  }
+  if (i >= 0) go(i);
+}
+
+/* ---------- controls ---------- */
+splitSel.innerHTML = splits.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+splitSel.addEventListener("change", () => {
+  const i = battles.findIndex(b => b.split === splitSel.value);
+  if (i >= 0) go(i);
+});
+
+stubsBox.checked = showStubs;
+stubsBox.addEventListener("change", () => {
+  const cur = battles[pos]?.trainers[0].trainerIndex;
+  showStubs = stubsBox.checked;
+  store.set("tb.stubs", showStubs ? "1" : "0");
+  battles = buildBattles(showStubs);
+  // stay on the same trainer, or the nearest one after it
+  let i = findBattle(cur);
+  if (i < 0) i = battles.findIndex(b => b.trainers[0].trainerIndex > cur);
+  go(i < 0 ? battles.length - 1 : i);
+  updateSummary();
+});
+
+prevBtn.addEventListener("click", () => go(pos - 1));
+nextBtn.addEventListener("click", () => go(pos + 1));
+$("rosterList").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-t]");
+  if (btn) goTrainer(+btn.dataset.t);
+});
+
+/* search */
+let hits = [], sel = 0;
+function search(term) {
+  term = term.trim().toLowerCase();
+  if (!term) return [];
+  const num = term.replace(/^#/, "");
+  const out = [];
+  if (/^\d+$/.test(num)) {
+    const t = trainers.find(t => t.trainerIndex === +num);
+    if (t) out.push({ t, why: "" });
+  }
+  for (const t of trainers) {
+    if (out.length >= 40) break;
+    if (out.some(o => o.t === t)) continue;
+    if (t.name.toLowerCase().includes(term)) out.push({ t, why: "", rank: t.name.toLowerCase().startsWith(term) ? 0 : 1 });
+    else if ((t.location || "").toLowerCase().includes(term)) out.push({ t, why: t.location, rank: 1.5 });
+  }
+  for (const t of trainers) {
+    if (out.length >= 40) break;
+    if (out.some(o => o.t === t)) continue;
+    const m = t.mons.find(m => m.name.toLowerCase().includes(term));
+    if (m) out.push({ t, why: `Has ${m.name} (Lv ${m.level})`, rank: 2 });
+  }
+  return out.sort((a, b) => (a.rank ?? -1) - (b.rank ?? -1));
+}
+function drawResults() {
+  if (!q.value.trim()) { closeResults(); return; }
+  results.hidden = false; q.setAttribute("aria-expanded", "true");
+  if (!hits.length) { results.innerHTML = `<li class="empty">No trainer or Pokémon matches “${esc(q.value)}”.</li>`; return; }
+  results.innerHTML = hits.map((h, i) => `<li role="option" id="r${i}" data-i="${i}" aria-selected="${i === sel}">
+    <span class="ri">#${pad(h.t.trainerIndex)}</span>
+    <span class="rn">${esc(h.t.name)}${h.why ? `<small>${esc(h.why)}</small>` : ""}${h.t.stub ? `<small>Placeholder</small>` : ""}</span>
+    <span class="rs">${esc(h.t.split)}</span></li>`).join("");
+  q.setAttribute("aria-activedescendant", "r" + sel);
+  results.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+}
+function closeResults() { results.hidden = true; q.setAttribute("aria-expanded", "false"); q.removeAttribute("aria-activedescendant"); }
+function pick(i) {
+  const h = hits[i]; if (!h) return;
+  goTrainer(h.t.trainerIndex);
+  q.value = ""; hits = []; closeResults(); q.blur();
+}
+q.addEventListener("input", () => { hits = search(q.value); sel = 0; drawResults(); });
+q.addEventListener("focus", () => { if (q.value.trim()) drawResults(); });
+q.addEventListener("keydown", e => {
+  if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(hits.length - 1, sel + 1); drawResults(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); drawResults(); }
+  else if (e.key === "Enter") { e.preventDefault(); pick(sel); }
+  else if (e.key === "Escape") { q.value = ""; closeResults(); q.blur(); }
+});
+results.addEventListener("mousedown", e => {
+  const li = e.target.closest("li[data-i]");
+  if (li) { e.preventDefault(); pick(+li.dataset.i); }
+});
+document.addEventListener("click", e => { if (!e.target.closest(".search")) closeResults(); });
+
+document.addEventListener("keydown", e => {
+  const typing = e.target.matches("input, select, textarea");
+  if (typing) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); go(pos + 1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); go(pos - 1); }
+  else if (e.key === "/") { e.preventDefault(); q.focus(); }
+});
+
+function updateSummary() {
+  const shown = trainers.filter(t => showStubs || !t.stub).length;
+  const hidden = trainers.length - shown;
+  $("summary").textContent = `${shown} trainers across ${splits.length} splits` + (hidden ? ` · ${hidden} placeholders hidden` : "") + (dataSource ? ` · ${dataSource}` : "");
+}
+
+function setView(v) {
+  view = v; store.set("tb.view", v);
+  $("vSheet").setAttribute("aria-pressed", v === "sheet");
+  $("vCards").setAttribute("aria-pressed", v === "cards");
+  render();
+}
+$("vSheet").addEventListener("click", () => setView("sheet"));
+$("vCards").addEventListener("click", () => setView("cards"));
+$("vSheet").setAttribute("aria-pressed", view === "sheet");
+$("vCards").setAttribute("aria-pressed", view === "cards");
+
+/* ---------- boot ---------- */
+if (dataSource) {
+  $("loadbtn").hidden = false;
+  $("file2").addEventListener("change", e => { const f = e.target.files[0]; if (f) loadPicked(f); });
+}
+updateSummary();
+const fromHash = /^#t(\d+)$/.exec(location.hash || "");
+const start = fromHash ? +fromHash[1] : +(store.get("tb.pos") ?? NaN);
+if (Number.isFinite(start)) goTrainer(start); else go(0);
+if (!battles[pos]) go(0);
+}
+
+boot();
+</script>
+
+</body>
+</html>
