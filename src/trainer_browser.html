@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="../theme/main.css?b1" />
 <link rel="stylesheet" href="../theme/pokedex.css?b359" />
 <link rel="stylesheet" href="../theme/dark.css?v2" />
-<title>Trainer Browser &mdash; Pok&eacute;mon Lucid</title>
+<title>Trainer Sheet &mdash; Pok&eacute;mon Lucid</title>
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -254,7 +254,7 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-st
 			<li><a class="button nav-first" href="https://github.com/lhearachel/porydex"><img src="../images/pokemonshowdownbeta.png" alt="Pok&eacute;mon Showdown! (beta)" />Github</a></li>
 			<li><a class="button" href="../">Pok&eacute;dex</a></li>
 			<li><a class="button" href="../calc/" target="_blank">Calculator</a></li>
-			<li><a class="button nav-last" href="resources.html">Trainer Sheet</a></li>
+			<li><a class="button nav-last cur" href="trainer_browser.html">Trainer Sheet</a></li>
 		</ul>
 		<div style="clear:both"></div>
 	</div>
@@ -262,22 +262,21 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-st
 <div class="navbar">
 	<ul>
 		<a href="resources.html">Home</a>
-		<a href="roxanne_split.html">Roxanne</a>
-		<a href="brawly_split.html">Brawly</a>
-		<a href="wattson_split.html">Wattson</a>
-		<a href="juan_split.html">Juan</a>
-		<a href="steven_split.html">Steven</a>
-		<a href="winona_split.html">Winona</a>
-		<a href="tate_and_liza_split.html">Tate & Liza</a>
-		<a href="flannery_split.html">Flannery</a>
-		<a href="elite_four_split.html">Elite Four</a>
-		<a href="trainer_browser.html" class="on">Trainer Browser</a>
+		<a href="#roxanne" data-split-link="roxanne">Roxanne</a>
+		<a href="#brawly" data-split-link="brawly">Brawly</a>
+		<a href="#wattson" data-split-link="wattson">Wattson</a>
+		<a href="#juan" data-split-link="juan">Juan</a>
+		<a href="#steven" data-split-link="steven">Steven</a>
+		<a href="#winona" data-split-link="winona">Winona</a>
+		<a href="#tate-and-liza" data-split-link="tate-and-liza">Tate & Liza</a>
+		<a href="#flannery" data-split-link="flannery">Flannery</a>
+		<a href="#elite-four" data-split-link="elite-four">Elite Four</a>
 	</ul>
 </div>
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <h1>Trainer Browser</h1>
+      <h1>Trainer Sheet</h1>
       <p id="summary"></p>
     </div>
     <div class="controls">
@@ -638,6 +637,18 @@ function partyRow(t, label) {
   return `<div class="row">${head}<div class="party">${cards}</div></div>`;
 }
 
+const splitSlug = name => name.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// "#t123" opens trainer 123, "#roxanne" / "#elite-four" opens the first fight of that split.
+function applyHash() {
+  const h = (location.hash || "").slice(1);
+  const t = /^t(\d+)$/.exec(h);
+  if (t) { goTrainer(+t[1]); return true; }
+  const i = h ? battles.findIndex(b => splitSlug(b.split) === h) : -1;
+  if (i >= 0) { go(i); return true; }
+  return false;
+}
+
 function render() {
   const b = battles[pos];
   if (!b) { panel.innerHTML = "<p>No trainers to show.</p>"; return; }
@@ -705,6 +716,7 @@ function render() {
   prevBtn.disabled = pos === 0;
   nextBtn.disabled = pos === battles.length - 1;
   splitSel.value = b.split;
+  document.querySelectorAll("[data-split-link]").forEach(a => a.classList.toggle("on", a.dataset.splitLink === splitSlug(b.split)));
   renderRoster(b, inSplit);
 
   store.set("tb.pos", String(lead.trainerIndex));
@@ -847,9 +859,11 @@ if (dataSource) {
   $("file2").addEventListener("change", e => { const f = e.target.files[0]; if (f) loadPicked(f); });
 }
 updateSummary();
-const fromHash = /^#t(\d+)$/.exec(location.hash || "");
-const start = fromHash ? +fromHash[1] : +(store.get("tb.pos") ?? NaN);
-if (Number.isFinite(start)) goTrainer(start); else go(0);
+window.addEventListener("hashchange", applyHash);
+if (!applyHash()) {
+  const start = +(store.get("tb.pos") ?? NaN);
+  if (Number.isFinite(start)) goTrainer(start); else go(0);
+}
 if (!battles[pos]) go(0);
 }
 
